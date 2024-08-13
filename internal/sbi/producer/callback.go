@@ -3,12 +3,13 @@ package producer
 import (
 	"fmt"
 
+	ben_models "github.com/BENHSU0723/openapi_public/models"
 	"github.com/free5gc/openapi/models"
 	udr_context "github.com/free5gc/udr/internal/context"
 	"github.com/free5gc/udr/internal/sbi/producer/callback"
 )
 
-func PreHandleOnDataChangeNotify(ueId string, resourceId string, patchItems []models.PatchItem,
+func PreHandleOnDataChangeNotify(ueId string, resourceId string, patchItems []ben_models.PatchItem,
 	origValue interface{}, newValue interface{},
 ) {
 	notifyItems := []models.NotifyItem{}

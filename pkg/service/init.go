@@ -10,6 +10,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/BENHSU0723/util/mongoapi"
 	udr_context "github.com/free5gc/udr/internal/context"
 	"github.com/free5gc/udr/internal/logger"
 	"github.com/free5gc/udr/internal/sbi/consumer"
@@ -17,7 +18,6 @@ import (
 	"github.com/free5gc/udr/pkg/factory"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
-	"github.com/free5gc/util/mongoapi"
 )
 
 type UdrApp struct {

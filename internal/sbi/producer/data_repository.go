@@ -7,11 +7,14 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
+	ben_models "github.com/BENHSU0723/openapi_public/models"
 	jsonpatch "github.com/evanphx/json-patch"
 	"github.com/mitchellh/mapstructure"
 	"go.mongodb.org/mongo-driver/bson"
 
+	"github.com/BENHSU0723/util/mongoapi"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	udr_context "github.com/free5gc/udr/internal/context"
@@ -19,7 +22,6 @@ import (
 	"github.com/free5gc/udr/internal/util"
 	"github.com/free5gc/udr/pkg/factory"
 	"github.com/free5gc/util/httpwrapper"
-	"github.com/free5gc/util/mongoapi"
 )
 
 const (
@@ -104,7 +106,7 @@ func QueryAmDataProcedure(collName string, ueId string, servingPlmnId string) (*
 func HandleAmfContext3gpp(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.DataRepoLog.Infof("Handle AmfContext3gpp")
 	collName := "subscriptionData.contextData.amf3gppAccess"
-	patchItem := request.Body.([]models.PatchItem)
+	patchItem := request.Body.([]ben_models.PatchItem)
 	ueId := request.Params["ueId"]
 
 	problemDetails := AmfContext3gppProcedure(collName, ueId, patchItem)
@@ -115,7 +117,7 @@ func HandleAmfContext3gpp(request *httpwrapper.Request) *httpwrapper.Response {
 	}
 }
 
-func patchDataToDBAndNotify(collName string, ueId string, patchItem []models.PatchItem, filter bson.M) error {
+func patchDataToDBAndNotify(collName string, ueId string, patchItem []ben_models.PatchItem, filter bson.M) error {
 	var err error
 	origValue, err := mongoapi.RestfulAPIGetOne(collName, filter)
 	if err != nil {
@@ -139,7 +141,7 @@ func patchDataToDBAndNotify(collName string, ueId string, patchItem []models.Pat
 	return nil
 }
 
-func AmfContext3gppProcedure(collName string, ueId string, patchItem []models.PatchItem) *models.ProblemDetails {
+func AmfContext3gppProcedure(collName string, ueId string, patchItem []ben_models.PatchItem) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
 		logger.DataRepoLog.Errorf("AmfContext3gppProcedure err: %+v", err)
@@ -205,7 +207,7 @@ func HandleAmfContextNon3gpp(request *httpwrapper.Request) *httpwrapper.Response
 
 	ueId := request.Params["ueId"]
 	collName := "subscriptionData.contextData.amfNon3gppAccess"
-	patchItem := request.Body.([]models.PatchItem)
+	patchItem := request.Body.([]ben_models.PatchItem)
 	filter := bson.M{"ueId": ueId}
 
 	problemDetails := AmfContextNon3gppProcedure(ueId, collName, patchItem, filter)
@@ -217,7 +219,7 @@ func HandleAmfContextNon3gpp(request *httpwrapper.Request) *httpwrapper.Response
 	}
 }
 
-func AmfContextNon3gppProcedure(ueId string, collName string, patchItem []models.PatchItem,
+func AmfContextNon3gppProcedure(ueId string, collName string, patchItem []ben_models.PatchItem,
 	filter bson.M,
 ) *models.ProblemDetails {
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
@@ -284,7 +286,7 @@ func HandleModifyAuthentication(request *httpwrapper.Request) *httpwrapper.Respo
 
 	collName := "subscriptionData.authenticationData.authenticationSubscription"
 	ueId := request.Params["ueId"]
-	patchItem := request.Body.([]models.PatchItem)
+	patchItem := request.Body.([]ben_models.PatchItem)
 
 	problemDetails := ModifyAuthenticationProcedure(collName, ueId, patchItem)
 
@@ -295,7 +297,7 @@ func HandleModifyAuthentication(request *httpwrapper.Request) *httpwrapper.Respo
 	}
 }
 
-func ModifyAuthenticationProcedure(collName string, ueId string, patchItem []models.PatchItem) *models.ProblemDetails {
+func ModifyAuthenticationProcedure(collName string, ueId string, patchItem []ben_models.PatchItem) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
 		logger.DataRepoLog.Errorf("ModifyAuthenticationProcedure err: %+v", err)
@@ -1364,7 +1366,7 @@ func HandlePolicyDataUesUeIdOperatorSpecificDataPatch(request *httpwrapper.Reque
 
 	collName := "policyData.ues.operatorSpecificData"
 	ueId := request.Params["ueId"]
-	patchItem := request.Body.([]models.PatchItem)
+	patchItem := request.Body.([]ben_models.PatchItem)
 
 	problemDetails := PolicyDataUesUeIdOperatorSpecificDataPatchProcedure(collName, ueId, patchItem)
 
@@ -1376,7 +1378,7 @@ func HandlePolicyDataUesUeIdOperatorSpecificDataPatch(request *httpwrapper.Reque
 }
 
 func PolicyDataUesUeIdOperatorSpecificDataPatchProcedure(collName string, ueId string,
-	patchItem []models.PatchItem,
+	patchItem []ben_models.PatchItem,
 ) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 
@@ -1857,7 +1859,7 @@ func RemoveAmfSubscriptionsInfoProcedure(subsId string, ueId string) *models.Pro
 func HandleModifyAmfSubscriptionInfo(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.DataRepoLog.Infof("Handle ModifyAmfSubscriptionInfo")
 
-	patchItem := request.Body.([]models.PatchItem)
+	patchItem := request.Body.([]ben_models.PatchItem)
 	ueId := request.Params["ueId"]
 	subsId := request.Params["subsId"]
 
@@ -1871,7 +1873,7 @@ func HandleModifyAmfSubscriptionInfo(request *httpwrapper.Request) *httpwrapper.
 }
 
 func ModifyAmfSubscriptionInfoProcedure(ueId string, subsId string,
-	patchItem []models.PatchItem,
+	patchItem []ben_models.PatchItem,
 ) *models.ProblemDetails {
 	udrSelf := udr_context.GetSelf()
 	value, ok := udrSelf.UESubsCollection.Load(ueId)
@@ -2276,7 +2278,7 @@ func HandlePatchOperSpecData(request *httpwrapper.Request) *httpwrapper.Response
 
 	collName := "subscriptionData.operatorSpecificData"
 	ueId := request.Params["ueId"]
-	patchItem := request.Body.([]models.PatchItem)
+	patchItem := request.Body.([]ben_models.PatchItem)
 
 	problemDetails := PatchOperSpecDataProcedure(collName, ueId, patchItem)
 
@@ -2287,7 +2289,7 @@ func HandlePatchOperSpecData(request *httpwrapper.Request) *httpwrapper.Response
 	}
 }
 
-func PatchOperSpecDataProcedure(collName string, ueId string, patchItem []models.PatchItem) *models.ProblemDetails {
+func PatchOperSpecDataProcedure(collName string, ueId string, patchItem []ben_models.PatchItem) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
 		logger.DataRepoLog.Errorf("PatchOperSpecDataProcedure err: %+v", err)
@@ -2513,7 +2515,7 @@ func HandleModifyPpData(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.DataRepoLog.Infof("Handle ModifyPpData")
 
 	collName := "subscriptionData.ppData"
-	patchItem := request.Body.([]models.PatchItem)
+	patchItem := request.Body.([]ben_models.PatchItem)
 	ueId := request.Params["ueId"]
 
 	problemDetails := ModifyPpDataProcedure(collName, ueId, patchItem)
@@ -2524,7 +2526,7 @@ func HandleModifyPpData(request *httpwrapper.Request) *httpwrapper.Response {
 	}
 }
 
-func ModifyPpDataProcedure(collName string, ueId string, patchItem []models.PatchItem) *models.ProblemDetails {
+func ModifyPpDataProcedure(collName string, ueId string, patchItem []ben_models.PatchItem) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
 		logger.DataRepoLog.Errorf("ModifyPpDataProcedure err: %+v", err)
@@ -3283,4 +3285,1171 @@ func QueryTraceDataProcedure(collName string, ueId string,
 		return nil, pd
 	}
 	return &data, nil
+}
+
+func HandleCreate5GLANgroup(request *httpwrapper.Request) *httpwrapper.Response {
+	logger.DataRepoLog.Infof("Handle Create5GLANgroup")
+
+	group5GLANConfig := request.Body.(ben_models.Model5GvnGroupConfiguration)
+	collName := "subscriptionData.Group5GLANData"
+	externalGroupId := request.Params["externalGroupId"]
+
+	response, problemDetails, status := Create5GLANgroupProcedure(group5GLANConfig, collName, externalGroupId)
+	//According to 3GPP TS 29.505 V17.9.0 (2022-12)
+	//Table 5.2.35.3.1-3: Data structures supported by the PUT Response Body on this resource
+	//return 5GVnGroupConfiguration if success, otherwise return ProblemDetails
+
+	//group data already exist
+	if status == http.StatusForbidden {
+		return httpwrapper.NewResponse(http.StatusForbidden, nil, problemDetails)
+	} else if status != http.StatusCreated {
+		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+
+	//TS 23.502-h70
+	//When the 5G VN group data (as described in clause 4.15.6.3b) or 5G VN group membership is updated, the
+	//UDR notifies to the subscribed PCF by sending Nudr_DM_Notify as defined in clause 4.16.12.2.
+	patchItem := ben_models.PatchItem{
+		Op:    ben_models.PatchOperation_ADD,
+		Path:  "subscriptionData.group5GLANData",
+		Value: group5GLANConfig,
+	}
+	for _, memberUeId := range group5GLANConfig.Members {
+		PreHandleOnDataChangeNotify(memberUeId, CurrentResourceUri, []ben_models.PatchItem{patchItem}, nil, nil)
+	}
+
+	//group creation sucuess
+	return httpwrapper.NewResponse(http.StatusCreated, nil, response)
+}
+
+func Create5GLANgroupProcedure(group5GLANConfig ben_models.Model5GvnGroupConfiguration,
+	collName string, externalGroupId string) (*ben_models.Model5GvnGroupConfiguration, *models.ProblemDetails, int) {
+	putData := util.ToBsonM(group5GLANConfig)
+	filter := bson.M{"externalGroupId": externalGroupId}
+	putData["externalGroupId"] = externalGroupId
+
+	//check the group data already exist or not
+	if mapData, err := mongoapi.RestfulAPIGetOne(collName, filter); err != nil {
+		logger.DataRepoLog.Errorf(err.Error())
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+		}
+		return nil, problemDetails, http.StatusInternalServerError
+	} else {
+		//data already existed
+		if len(mapData) != 0 {
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusForbidden,
+				Detail: "The 5GLAN group data already existed!!",
+			}
+			return nil, problemDetails, http.StatusForbidden
+		}
+	}
+
+	//insert 5GLAN VN group Config and external group id and intrenal group id into many tables ofMongoDB
+	collNames := []string{"subscriptionData.provisionedData.smData", "subscriptionData.provisionedData.amData", "subscriptionData.group5GLANData"}
+	problemDetrals, statusCode := PutVNGroupDataToDB(collNames, externalGroupId, group5GLANConfig)
+	if problemDetrals != nil {
+		return nil, problemDetrals, statusCode
+	}
+
+	return &group5GLANConfig, nil, http.StatusCreated
+}
+
+func PutVNGroupDataToDB(collNames []string, extGroupId string, vnGroupConfig ben_models.Model5GvnGroupConfiguration) (*models.ProblemDetails, int) {
+
+	for _, collName := range collNames {
+		switch collName {
+		//crete group data
+		case "subscriptionData.group5GLANData":
+			putData := util.ToBsonM(vnGroupConfig)
+			filter := bson.M{"externalGroupId": extGroupId}
+			putData["externalGroupId"] = extGroupId
+			if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
+				logger.DataRepoLog.Errorf("Insert 5GLAN VN group Data into table \"%s\" of DB err: %+v", collName, err)
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Detail: err.Error(),
+				}
+				return problemDetails, http.StatusInternalServerError
+			}
+		//insert internal group id to amData
+		case "subscriptionData.provisionedData.amData":
+			for _, memberUeId := range vnGroupConfig.Members {
+				filter := bson.M{"ueId": memberUeId}
+				oriamData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+				if err != nil {
+					logger.DataRepoLog.Errorf("Load amData list from table {%s} of DB err: %+v", collName, err)
+					problemDetails := &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Detail: err.Error(),
+					}
+					return problemDetails, http.StatusInternalServerError
+				}
+				// Convert the map to JSON
+				jsonData, _ := json.Marshal(oriamData["internalGroupIds"])
+				if jsonData == nil {
+					logger.DataRepoLog.Warn("amData: internalGroupIds is empty")
+				}
+				// Convert the JSON to a struct
+				var intGroupIds []string
+				json.Unmarshal(jsonData, &intGroupIds)
+				intGroupIds = append(intGroupIds, vnGroupConfig.InternalGroupIdentifier)
+				amData := models.AccessAndMobilitySubscriptionData{InternalGroupIds: intGroupIds}
+				amDataBsonM := util.ToBsonM(amData)
+				// logger.DataRepoLog.Warn(amDataBsonM)
+				// amDataBsonM["ueId"] = memberUeId
+				if err := mongoapi.RestfulAPIMergePatch(collName, filter, amDataBsonM); err != nil {
+					logger.DataRepoLog.Errorf("Insert 5GLAN VN group Data into table \"%s\" of DB err: %+v", collName, err)
+					problemDetails := &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Detail: err.Error(),
+					}
+					return problemDetails, http.StatusInternalServerError
+				}
+			}
+		//insert internal group id to smData
+		case "subscriptionData.provisionedData.smData":
+			for _, memberUeId := range vnGroupConfig.Members {
+				filter := bson.M{"ueId": memberUeId}
+				orismDataList, err := mongoapi.RestfulAPIGetMany(collName, filter)
+				if err != nil {
+					logger.DataRepoLog.Errorf("Load smdata list from table {%s} of DB err: %+v", collName, err)
+					problemDetails := &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Detail: err.Error(),
+					}
+					return problemDetails, http.StatusInternalServerError
+				}
+				logger.DataRepoLog.Infof("Create vn 5g group: ue got %d smDatas\n", len(orismDataList))
+				for _, orismData := range orismDataList {
+					//TODO: add  error handle for all convert action
+					// Convert the map to JSON
+					jsonData, _ := json.Marshal(orismData["singleNssai"])
+					// Convert the JSON to a struct
+					var snssai models.Snssai
+					json.Unmarshal(jsonData, &snssai)
+					filter := bson.M{"ueId": memberUeId} //ex: {"ueId":"imsi-208930000000003" ,"singleNssai": {"sst": 1,"sd": "010203"}}
+					// filter["singleNssai.sst"] = snssai.Sst
+					// filter["singleNssai.sd"] = snssai.Sd
+					filter["singleNssai"] = bson.M{"sst": snssai.Sst, "sd": snssai.Sd} //the order of sst and sd is important!!
+					logger.DataRepoLog.Debug(filter)
+					// data, err := mongoapi.RestfulAPIGetOne(collName, filter)
+					// if err != nil {
+					// 	logger.DataRepoLog.Errorln(err.Error())
+					// }
+					// logger.DataRepoLog.Info(data)
+
+					// Convert the map to JSON
+					jsonData, _ = json.Marshal(orismData)
+					// Convert the JSON to a struct
+					var newsmData models.SessionManagementSubscriptionData
+					json.Unmarshal(jsonData, &newsmData)
+					newsmData.InternalGroupIds = append(newsmData.InternalGroupIds, vnGroupConfig.InternalGroupIdentifier)
+					smDataBsonM := util.ToBsonM(newsmData)
+					smDataBsonM["ueId"] = memberUeId                          //addtionall Info
+					smDataBsonM["servingPlmnId"] = orismData["servingPlmnId"] //addtionall Info
+					logger.DataRepoLog.Debug(smDataBsonM)
+					if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+						logger.DataRepoLog.Errorf("Insert 5GLAN VN group Data into table {%s} of DB err: %+v", collName, err)
+						problemDetails := &models.ProblemDetails{
+							Status: http.StatusInternalServerError,
+							Detail: err.Error(),
+						}
+						return problemDetails, http.StatusInternalServerError
+					}
+					filter["singleNssai"] = bson.M{"sd": snssai.Sd, "sst": snssai.Sst}
+					if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+						logger.DataRepoLog.Errorf("Insert 5GLAN VN group Data into table {%s} of DB err: %+v", collName, err)
+						problemDetails := &models.ProblemDetails{
+							Status: http.StatusInternalServerError,
+							Detail: err.Error(),
+						}
+						return problemDetails, http.StatusInternalServerError
+					}
+					existed, err := mongoapi.RestfulAPIPutOne(collName, filter, smDataBsonM)
+					if err != nil {
+						logger.DataRepoLog.Errorf("Insert 5GLAN VN group Data into table {%s} of DB err: %+v", collName, err)
+						problemDetails := &models.ProblemDetails{
+							Status: http.StatusInternalServerError,
+							Detail: err.Error(),
+						}
+						return problemDetails, http.StatusInternalServerError
+					}
+					logger.DataRepoLog.Debug("existed:", existed)
+				}
+			}
+		default:
+			logger.DataRepoLog.Warnf("The process of database \"%s\" does not implement !!", collName)
+		}
+	}
+	logger.DataRepoLog.Infoln("Insert VN group data success!!")
+	return nil, http.StatusOK
+}
+
+// func getSnssai(mapSnssai interface{}) models.Snssai {
+// 	logger.DataRepoLog.Warn(mapSnssai)
+// 	snssaiReflected := reflect.ValueOf(map[string]string) // use reflect to range over interface{}
+// 	snssai := snssaiReflected.Interface().(models.Snssai) // transform type reflect.value to string
+// 	return snssai
+// }
+
+func getMsisdn(gpsis interface{}) string {
+	msisdn := ""
+	gpsisReflected := reflect.ValueOf(gpsis) // use reflect to range over interface{}
+	for i := 0; i < gpsisReflected.Len(); i++ {
+		gpsi := gpsisReflected.Index(i).Interface().(string) // transform type reflect.value to string
+		if strings.HasPrefix(gpsi, "msisdn-") {              // check if gpsi contain prefix "msisdn-"
+			msisdn = gpsi[7:]
+		}
+	}
+	return msisdn
+}
+
+func HandleRetrive5GLANGroupDataInternal(request *httpwrapper.Request) *httpwrapper.Response {
+	logger.DataRepoLog.Infof("Handle Retrive5GLANGroupDataInternal")
+
+	InternalGroupIdList := request.Body.(ben_models.InternalGroupIdList)
+	collName := "subscriptionData.group5GLANData"
+
+	response, problemDetails, status := Retrive5GLANGroupDataInternalProcedure(InternalGroupIdList, collName)
+
+	//retrive group data from DB sucuess
+	if status == http.StatusOK {
+		return httpwrapper.NewResponse(http.StatusOK, nil, response)
+	} else {
+		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+}
+
+func Retrive5GLANGroupDataInternalProcedure(InternalGroupIdList ben_models.InternalGroupIdList, collName string) (map[string]ben_models.Model5GvnGroupConfiguration, *models.ProblemDetails, int) {
+	//ref TS29.505-h90 ,section 5.2.43 Resource: 5GVnGroupsInternal
+	//Upon success, a response body containing the map (list of key-value pairs where ExtGroupId
+
+	GroupVN5GLANConfigList := map[string]ben_models.Model5GvnGroupConfiguration{}
+	for _, InternalGroupId := range InternalGroupIdList.Internalgroupids {
+		filter := bson.M{"internalGroupIdentifier": InternalGroupId}
+		if groupData, err := mongoapi.RestfulAPIGetOne(collName, filter); err != nil {
+			logger.DataRepoLog.Errorln(err.Error())
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails, http.StatusInternalServerError
+		} else {
+			//data does not exist
+			if len(groupData) == 0 {
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusBadRequest,
+					Detail: "The internal group id doen't exist: " + InternalGroupId,
+				}
+				return nil, problemDetails, http.StatusBadRequest
+			} else {
+				var externalGroupId string = (groupData["externalGroupId"]).(string)
+				var groupConfig ben_models.Model5GvnGroupConfiguration
+				err := json.Unmarshal(util.MapToByte(groupData), &groupConfig)
+				if err != nil {
+					logger.DataRepoLog.Errorln("[Retrive5GLANGroupDataInternal] GroupData Unmarshal error")
+					return nil, util.ProblemDetailsSystemFailure(err.Error()), http.StatusBadRequest
+				}
+				GroupVN5GLANConfigList[externalGroupId] = groupConfig
+				logger.DataRepoLog.Debug(groupConfig)
+			}
+		}
+	}
+	return GroupVN5GLANConfigList, nil, http.StatusOK
+}
+
+func Handle5GVnGroupConfigurationGET(request *httpwrapper.Request) *httpwrapper.Response {
+	logger.DataRepoLog.Info("Handle 5GVnGroupConfigurationGET")
+
+	externalGroupId := request.Params["externalGroupId"]
+	collname := "subscriptionData.group5GLANData"
+
+	response, problemDetails := Handle5GVnGroupConfigurationGetProcedure(externalGroupId, collname)
+
+	if problemDetails == nil {
+		return httpwrapper.NewResponse(http.StatusOK, nil, response)
+	} else {
+		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+}
+
+func Handle5GVnGroupConfigurationGetProcedure(extGroupId, collname string) (*ben_models.Model5GvnGroupConfiguration, *models.ProblemDetails) {
+	filter := bson.M{"externalGroupId": extGroupId}
+
+	//get group config from DB using external group Id
+	if mapData, problemDetail := getDataFromDB(collname, filter); problemDetail != nil {
+		return nil, problemDetail
+	} else {
+		var vnGroupConfig *ben_models.Model5GvnGroupConfiguration
+		if len(mapData) != 0 {
+			// logger.DataRepoLog.Info(len(mapData))
+			// logger.DataRepoLog.Info(mapData)
+			err := json.Unmarshal(util.MapToByte(mapData), &vnGroupConfig)
+			if err != nil {
+				logger.DataRepoLog.Errorf(err.Error())
+				return nil, util.ProblemDetailsSystemFailure(err.Error())
+			}
+			return vnGroupConfig, nil
+		} else {
+			logger.DataRepoLog.Errorf("5G VN Group not found in DB !!")
+			return nil, util.ProblemDetailsNotFound("5G_VN_GROUP_NOT_FOUND")
+		}
+	}
+}
+
+func Handle5GVnGroupDelete(request *httpwrapper.Request) *httpwrapper.Response {
+	logger.DataRepoLog.Info("Handle 5GVnGroupDelete")
+
+	extGpId := request.Params["externalGroupId"]
+	collnames := []string{"subscriptionData.group5GLANData", "subscriptionData.extintGroupIDMap",
+		"subscriptionData.provisionedData.smData", "subscriptionData.provisionedData.amData"}
+
+	problemDetails := Handle5GVnGroupDeleteProcedure(extGpId, collnames)
+
+	if problemDetails == nil {
+		return httpwrapper.NewResponse(http.StatusNoContent, nil, nil)
+	} else {
+		logger.DataRepoLog.Errorf("Handle5GVnGroupDelete error:%+v\n", *problemDetails)
+		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+}
+
+func Handle5GVnGroupDeleteProcedure(extGpId string, collnames []string) *models.ProblemDetails {
+	var memberUpsis []string
+	var intGroupId string
+	for _, collName := range collnames {
+		switch collName {
+		case "subscriptionData.provisionedData.amData":
+			for _, memberUeId := range memberUpsis {
+				filter := bson.M{"ueId": memberUeId}
+				oriamData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+				if err != nil {
+					logger.DataRepoLog.Errorf("Load amData list from table {%s} of DB err: %+v", collName, err)
+					problemDetails := &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Detail: err.Error(),
+					}
+					return problemDetails
+				}
+				// Convert the map to JSON
+				jsonData, _ := json.Marshal(oriamData)
+				// Convert the JSON to a struct
+				var amData models.AccessAndMobilitySubscriptionData
+				json.Unmarshal(jsonData, &amData)
+				// crate a new slice without the discarded internal group Id
+				var newGroupIds []string
+				for _, intGpId := range amData.InternalGroupIds {
+					if intGpId != intGroupId {
+						newGroupIds = append(newGroupIds, intGpId)
+					}
+				}
+				amData.InternalGroupIds = newGroupIds
+				amDataBsonM := util.ToBsonM(amData)
+				amDataBsonM["ueId"] = memberUeId
+				amDataBsonM["servingPlmnId"] = oriamData["servingPlmnId"]
+				// delete origin AM data
+				if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+					logger.DataRepoLog.Errorf("Delete a 5GLAN VN group internal Id from table \"%s\" of %s err: %+v", collName, memberUeId, err)
+					problemDetails := &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Detail: err.Error(),
+					}
+					return problemDetails
+				}
+				// create a new AM data
+				if _, err := mongoapi.RestfulAPIPutOne(collName, filter, amDataBsonM); err != nil {
+					logger.DataRepoLog.Errorf("Create a new AM data from table \"%s\" of %s err: %+v", collName, memberUeId, err)
+					problemDetails := &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Detail: err.Error(),
+					}
+					return problemDetails
+				}
+			}
+			logger.DataRepoLog.Infof("Delete internal group Id[%s] from amData success!!\n", intGroupId)
+		case "subscriptionData.provisionedData.smData":
+			for _, memberUeId := range memberUpsis {
+				filter := bson.M{"ueId": memberUeId}
+				oriSmDataList, err := mongoapi.RestfulAPIGetMany(collName, filter)
+				if err != nil {
+					logger.DataRepoLog.Errorf("Load smdata list from table {%s} of DB err: %+v", collName, err)
+					problemDetails := &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Detail: err.Error(),
+					}
+					return problemDetails
+				}
+				logger.DataRepoLog.Warnf("Delete 5g vn group : ue got %d smDatas: \n", len(oriSmDataList))
+				for _, oriSmData := range oriSmDataList {
+					//TODO: add  error handle for all convert action
+					// filter: Convert the map to JSON
+					jsonData, _ := json.Marshal(oriSmData["singleNssai"])
+					// filter: Convert the JSON to a struct
+					var snssai models.Snssai
+					json.Unmarshal(jsonData, &snssai)
+					filter := bson.M{"ueId": memberUeId} //ex: {"ueId":"imsi-208930000000003" ,"singleNssai": {"sst": 1,"sd": "010203"}}
+					// filter["singleNssai.sst"] = snssai.Sst
+					// filter["singleNssai.sd"] = snssai.Sd
+					filter["singleNssai"] = bson.M{"sst": snssai.Sst, "sd": snssai.Sd} //the order of sst and sd is important!!
+					// SmData: Convert the map to JSON
+					jsonData, _ = json.Marshal(oriSmData)
+					// SmData: Convert the JSON to a struct
+					var newsmData models.SessionManagementSubscriptionData
+					json.Unmarshal(jsonData, &newsmData)
+					// delete a group Id from internal group id list
+					var newIntGpIds []string
+					for _, intGpid := range newsmData.InternalGroupIds {
+						if intGpid != intGroupId {
+							newIntGpIds = append(newIntGpIds, intGpid)
+						}
+					}
+					newsmData.InternalGroupIds = newIntGpIds
+					smDataBsonM := util.ToBsonM(newsmData)
+					smDataBsonM["ueId"] = memberUeId                          //addtionall Info
+					smDataBsonM["servingPlmnId"] = oriSmData["servingPlmnId"] //addtionall Info
+					logger.DataRepoLog.Debug(smDataBsonM)
+					if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+						logger.DataRepoLog.Errorf("Delete internal 5GLAN VN group Id from table {%s} of UE{%s} err: %+v", collName, memberUeId, err)
+						problemDetails := &models.ProblemDetails{
+							Status: http.StatusInternalServerError,
+							Detail: err.Error(),
+						}
+						return problemDetails
+					}
+					filter["singleNssai"] = bson.M{"sd": snssai.Sd, "sst": snssai.Sst} //the order of sst and sd is important!!
+					if err := mongoapi.RestfulAPIDeleteMany(collName, filter); err != nil {
+						logger.DataRepoLog.Errorf("Delete internal 5GLAN VN group Id from table {%s} of UE{%s} err: %+v", collName, memberUeId, err)
+						problemDetails := &models.ProblemDetails{
+							Status: http.StatusInternalServerError,
+							Detail: err.Error(),
+						}
+						return problemDetails
+					}
+					// time.Sleep(time.Duration(200) * time.Millisecond)
+					var existed bool
+					if existed, err = mongoapi.RestfulAPIPutOne(collName, filter, smDataBsonM); err != nil {
+						logger.DataRepoLog.Errorf("Insert a new UE SmData with groupIds from \"%s\" of %s err: %+v", collName, memberUeId, err)
+						problemDetails := &models.ProblemDetails{
+							Status: http.StatusInternalServerError,
+							Detail: err.Error(),
+						}
+						return problemDetails
+					}
+					if existed {
+						logger.DataRepoLog.Warnf("SM data of ue[%s,%+v] has already existed\n", memberUeId, filter["singleNssai"])
+					}
+				}
+			}
+			logger.DataRepoLog.Infof("Delete internal group Id[%s] from smData success!!\n", intGroupId)
+		case "subscriptionData.extintGroupIDMap":
+			filter := bson.M{"externalGroupId": extGpId}
+			mapIdData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+			if err != nil {
+				logger.DataRepoLog.Errorf(err.Error())
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Detail: err.Error(),
+				}
+				return problemDetails
+			}
+			if len(mapIdData) == 0 {
+				logger.DataRepoLog.Warnf("the external group id{%s} is not found in %s\n", extGpId, collName)
+				return &models.ProblemDetails{
+					Status: http.StatusNotFound,
+					Detail: fmt.Sprintf("the external group id{%s} is not found in %s\n", extGpId, collName),
+					Cause:  "GROUP_IDENTIFIER_NOT_FOUND",
+				}
+			}
+			err = mongoapi.RestfulAPIDeleteOne(collName, filter)
+			if err != nil {
+				logger.DataRepoLog.Errorf(err.Error())
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Detail: err.Error(),
+				}
+				return problemDetails
+			}
+			logger.DataRepoLog.Infoln("Delete extintGroupIDMap success!!")
+		case "subscriptionData.group5GLANData":
+			filter := bson.M{"externalGroupId": extGpId}
+			//check the group data already exist or not
+			groupData, err := mongoapi.RestfulAPIGetOne(collName, filter)
+			if err != nil {
+				logger.DataRepoLog.Errorf(err.Error())
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Detail: err.Error(),
+				}
+				return problemDetails
+			}
+			if len(groupData) == 0 {
+				logger.DataRepoLog.Warnf("the external group id{%s} is not found in %s\n", extGpId, collName)
+				return &models.ProblemDetails{
+					Status: http.StatusNotFound,
+					Detail: fmt.Sprintf("the external group id{%s} is not found in %s\n", extGpId, collName),
+					Cause:  "GROUP_IDENTIFIER_NOT_FOUND",
+				}
+			}
+			// retrive members data(UPSIs) from 5G VN group config
+			jsonData, err := json.Marshal(groupData["members"])
+			if err != nil {
+				logger.DataRepoLog.Errorln("error of transfer group members from DB to json")
+			} else if jsonData == nil {
+				logger.DataRepoLog.Warn("group5GLANData: members is empty")
+			}
+			// Convert the JSON to a struct
+			json.Unmarshal(jsonData, &memberUpsis)
+			intGroupId = groupData["internalGroupIdentifier"].(string)
+			logger.DataRepoLog.Infoln(memberUpsis)
+			err = mongoapi.RestfulAPIDeleteOne(collName, filter)
+			if err != nil {
+				logger.DataRepoLog.Errorf(err.Error())
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Detail: err.Error(),
+				}
+				return problemDetails
+			}
+			logger.DataRepoLog.Infoln("Delete group5GLANData success!!")
+		}
+	}
+	return nil
+}
+
+func HandleQuery5GVnGroup(request *httpwrapper.Request) *httpwrapper.Response {
+	logger.DataRepoLog.Info("Handle Query5GVnGroup")
+
+	gpsis := request.Query["gpsis"]
+	collname := "subscriptionData.group5GLANData"
+
+	vn5ghGpCfgs, problemDetails := HandleQuery5GVnGroupProcedure(gpsis, collname)
+
+	if problemDetails == nil {
+		return httpwrapper.NewResponse(http.StatusOK, nil, vn5ghGpCfgs)
+	} else {
+		logger.DataRepoLog.Errorf("HandleQuery5GVnGroup error:%+v\n", *problemDetails)
+		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+}
+
+func HandleQuery5GVnGroupProcedure(gpsis []string, collName string) (*map[string]ben_models.Model5GvnGroupConfiguration, *models.ProblemDetails) {
+	// a response body containing the map (list of key-value pairs where ExtGroupId
+	// (see 3GPP TS 29.503 [6] serves as key) of 5GVnGroupConfiguration shall be returned.
+	rspVn5gGpCfgs := make(map[string]ben_models.Model5GvnGroupConfiguration)
+	var gpsisIntGpIds, extIdlist []string
+	// retrive all internal group ids of all gpsis
+	amDataColl := "subscriptionData.provisionedData.amData"
+	for _, gpsi := range gpsis {
+		filter := bson.M{"ueId": gpsi}
+		oriAmData, err := mongoapi.RestfulAPIGetOne(amDataColl, filter)
+		if err != nil {
+			logger.DataRepoLog.Errorf(err.Error())
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
+		}
+		jsonData, _ := json.Marshal(oriAmData)
+		// Convert the JSON to a struct
+		var amData models.AccessAndMobilitySubscriptionData
+		json.Unmarshal(jsonData, &amData)
+
+		gpsisIntGpIds = append(gpsisIntGpIds, amData.InternalGroupIds...)
+	}
+	// delete duplicated internal group id of slice
+	gpsisIntGpIds = removeDuplicateStr(gpsisIntGpIds)
+
+	// retrive 5G VN Group Configs based on internal group ids
+	groupColl := "subscriptionData.group5GLANData"
+	extIntGpIdColl := "subscriptionData.extintGroupIDMap"
+	for _, intGpId := range gpsisIntGpIds {
+		filter := bson.M{"internalGroupIdentifier": intGpId}
+		groupCfgs, err := mongoapi.RestfulAPIGetOne(groupColl, filter)
+		if err != nil {
+			logger.DataRepoLog.Errorf(err.Error())
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
+		}
+		jsonData, err := json.Marshal(groupCfgs)
+		if err != nil {
+			logger.DataRepoLog.Errorln("error of transfer group configs from DB to json")
+		} else if jsonData == nil {
+			logger.DataRepoLog.Warn("HandleQuery5GVnGroupProcedure: there is no group config")
+		}
+		// Convert the JSON to a struct
+		var vn5gGpCfgs ben_models.Model5GvnGroupConfiguration
+		json.Unmarshal(jsonData, &vn5gGpCfgs)
+
+		// retrive external group Id as key of map based on internal group Ids
+		filter = bson.M{"internalGroupId": intGpId}
+		gpIdData, err := mongoapi.RestfulAPIGetOne(extIntGpIdColl, filter)
+		if err != nil {
+			logger.DataRepoLog.Errorf(err.Error())
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
+		}
+		extIntGpId := gpIdData["externalGroupId"].(string)
+		rspVn5gGpCfgs[extIntGpId] = vn5gGpCfgs
+		extIdlist = append(extIdlist, extIntGpId)
+	}
+
+	logger.DataRepoLog.Infof("totally Get %d group configs, external group Id list:%+v\n", len(rspVn5gGpCfgs), extIdlist)
+	return &rspVn5gGpCfgs, nil
+}
+
+func removeDuplicateStr(strSlice []string) []string {
+	allKeys := make(map[string]bool)
+	list := []string{}
+	for _, item := range strSlice {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
+}
+
+func HandleQueryGroupIdentifiers(request *httpwrapper.Request) *httpwrapper.Response {
+	// supFeat := request.Query.Get("supported-features")
+	extGpId := request.Query.Get("ext-group-id")
+	intGpId := request.Query.Get("int-group-id")
+	ueIdneed := request.Query.Get("ue-id-ind")
+	if ueIdneed != "true" {
+		ueIdneed = "false"
+	}
+	if extGpId == "" && intGpId == "" {
+		logger.DataRepoLog.Warnln("QueryGroupIdentifiers: Either the ext-group-id or the int-group-id shall be present in the request")
+		return httpwrapper.NewResponse(http.StatusNotFound, nil, nil)
+	}
+
+	gpIdsData, problemDetails := HandleQueryGroupIdentifiersProcedure(extGpId, intGpId, ueIdneed)
+
+	if problemDetails == nil {
+		return httpwrapper.NewResponse(http.StatusOK, nil, gpIdsData)
+	} else {
+		logger.DataRepoLog.Errorf("HandleQueryGroupIdentifiers error:%+v\n", *problemDetails)
+		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+}
+
+func HandleQueryGroupIdentifiersProcedure(extGpId, intGpId, ueIdNeed string) (*ben_models.GroupIdentifiers, *models.ProblemDetails) {
+	var rspGroupIds ben_models.GroupIdentifiers
+	var filter bson.M
+	if extGpId == "" {
+		filter = bson.M{"internalGroupId": intGpId}
+	} else {
+		filter = bson.M{"externalGroupId": extGpId}
+	}
+	// retrive internal/external group id
+	gpIdColl := "subscriptionData.extintGroupIDMap"
+	gpIdMap, err := mongoapi.RestfulAPIGetOne(gpIdColl, filter)
+	if err != nil {
+		logger.DataRepoLog.Errorf(err.Error())
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+		}
+		return nil, problemDetails
+	} else if len(gpIdMap) == 0 {
+		logger.DataRepoLog.Warnf("HandleQueryGroupIdentifiersProcedure: can't find group Id by %v\n", filter)
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Detail: fmt.Sprintf("group id{%v} is not valid", filter),
+		}
+		return nil, problemDetails
+	}
+	rspGroupIds.ExtGroupId = gpIdMap["externalGroupId"].(string)
+	rspGroupIds.IntGroupId = gpIdMap["internalGroupId"].(string)
+
+	// retrive group ueId by retriving 5G Vn Group config
+	if ueIdNeed == "true" {
+		gpCfgColl := "subscriptionData.group5GLANData"
+		filter = bson.M{"internalGroupIdentifier": rspGroupIds.IntGroupId}
+		groupData, err := mongoapi.RestfulAPIGetOne(gpCfgColl, filter)
+		if err != nil {
+			logger.DataRepoLog.Errorf(err.Error())
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
+		}
+		var groupCfg ben_models.Model5GvnGroupConfiguration
+		jsonData, _ := json.Marshal(groupData)
+		json.Unmarshal(jsonData, &groupCfg)
+		rspGroupIds.UeIdList = groupCfg.Members
+		rspGroupIds.AllowedAfIds = append(rspGroupIds.AllowedAfIds, groupCfg.AfInstanceId)
+	}
+	return &rspGroupIds, nil
+}
+
+func HandleModify5GVnGroup(request *httpwrapper.Request) *httpwrapper.Response {
+	logger.DataRepoLog.Infof("Handle HandleModify5GVnGroup")
+
+	supFeat := request.Query.Get("supported-features")
+	patchItems := request.Body.([]ben_models.PatchItem)
+	extGpId := request.Params["externalGroupId"]
+
+	patchResult, problemDetails := HandleModify5GVnGroupProcedure(patchItems, extGpId, supFeat)
+
+	if problemDetails == nil {
+		if len(patchItems) == 0 {
+			return httpwrapper.NewResponse(http.StatusNoContent, nil, nil)
+		}
+		return httpwrapper.NewResponse(http.StatusOK, nil, patchResult)
+	} else {
+		logger.DataRepoLog.Errorf("HandleModify5GVnGroup error:%+v\n", *problemDetails)
+		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+}
+
+func HandleModify5GVnGroupProcedure(patchItems []ben_models.PatchItem, extGpId, supFeat string) (*ben_models.PatchResult, *models.ProblemDetails) {
+	// retrive Internal Group Id first using External Group Id
+	gpIdMapColl := "subscriptionData.extintGroupIDMap"
+	filter := bson.M{"externalGroupId": extGpId}
+	gpIdMap, err := mongoapi.RestfulAPIGetOne(gpIdMapColl, filter)
+	if err != nil {
+		logger.DataRepoLog.Errorf(err.Error())
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusInternalServerError,
+			Detail: err.Error(),
+		}
+		return nil, problemDetails
+	} else if len(gpIdMap) == 0 {
+		logger.DataRepoLog.Errorf("can't find external id{%s} related info in DB\n", extGpId)
+		problemDetails := &models.ProblemDetails{
+			Status: http.StatusNotFound,
+			Detail: err.Error(),
+			Cause:  "GROUP_IDENTIFIER_NOT_FOUND",
+		}
+		return nil, problemDetails
+	}
+	intGpId := gpIdMap["internalGroupId"].(string)
+
+	// patch elements stored in 5G VN group Config using internal group Id
+	// add / remove internal group id from subscription data per UE
+	var patchResults ben_models.PatchResult
+	for _, patchItem := range patchItems {
+		switch patchItem.Op {
+		case ben_models.PatchOperation_ADD:
+			logger.DataRepoLog.Infof("PATCH single Item :%+v\n", patchItem)
+			gpsis := patchItem.Value.([]interface{})
+			collnames := []string{"subscriptionData.provisionedData.amData", "subscriptionData.provisionedData.smData"}
+			for _, gpsi := range gpsis {
+				logger.DataRepoLog.Infoln("Add a member to 5G VN Group--GPSI:", gpsi.(string))
+				if problemDetails := addInternalGroupIdToUeSubs(collnames, gpsi.(string), intGpId); problemDetails != nil {
+					return nil, problemDetails
+				}
+			}
+		case ben_models.PatchOperation_REMOVE:
+			logger.DataRepoLog.Infof("PATCH single Item :%+v\n", patchItem)
+			gpsis := patchItem.Value.([]interface{})
+			collnames := []string{"subscriptionData.provisionedData.amData", "subscriptionData.provisionedData.smData"}
+			for _, gpsi := range gpsis {
+				logger.DataRepoLog.Infoln("Delete a member from 5G VN Group--GPSI:", gpsi.(string))
+				if problemDetails := deleteInternalGroupIdfromUeSubs(collnames, gpsi.(string), intGpId); problemDetails != nil {
+					return nil, problemDetails
+				}
+			}
+		case ben_models.PatchOperation_REPLACE:
+			vnGpColl := "subscriptionData.group5GLANData"
+			filter = bson.M{"internalGroupIdentifier": intGpId}
+			if err := patchDataToDBAndNotify(vnGpColl, "", []ben_models.PatchItem{patchItem}, filter); err != nil {
+				patchResults.Report = append(patchResults.Report, ben_models.ReportItem{
+					Path:   patchItem.Path,
+					Reason: err.Error(),
+				})
+			}
+		}
+	}
+
+	if len(patchResults.Report) == 0 {
+		return &patchResults, nil
+	}
+	return nil, nil
+}
+
+func addInternalGroupIdToUeSubs(collnames []string, ueId, newGpId string) *models.ProblemDetails {
+	patchItems := []ben_models.PatchItem{{
+		Op:    ben_models.PatchOperation_ADD,
+		Path:  "/internalGroupIds/-",
+		Value: newGpId,
+	}}
+
+	for _, collName := range collnames {
+		switch collName {
+		case "subscriptionData.provisionedData.amData":
+			origValue, err := mongoapi.RestfulAPIGetOne(collName, bson.M{"ueId": ueId})
+			if err != nil {
+				logger.DataRepoLog.Errorln("RestfulAPIGetOne:", err.Error())
+				return &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Type:   err.Error(),
+				}
+			}
+			// build the new internal internal group Ids
+			filter := bson.M{"ueId": ueId}
+			newIntGpIds := []string{newGpId}
+			if origValue["internalGroupIds"] != nil {
+				oriIntGpIds := origValue["internalGroupIds"].(bson.A)
+				for _, gpId := range oriIntGpIds {
+					newIntGpIds = append(newIntGpIds, gpId.(string))
+				}
+			}
+			logger.DataRepoLog.Infof("new internal group Ids of AM-Data of ue[%s]:%v\n", ueId, newIntGpIds)
+			amDataBsonM := bson.M{"internalGroupIds": newIntGpIds}
+			// update the new internal internal group Ids in AM data
+			rspBool, err := mongoapi.RestfulAPIPutOne(collName, filter, amDataBsonM)
+			if err != nil {
+				logger.DataRepoLog.Errorln("RestfulAPIPutOne:", err.Error())
+				return &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Type:   err.Error(),
+				}
+			}
+			logger.DataRepoLog.Infoln("Modify operation Search Existed AM-Data result:", rspBool)
+			// notify the subscription data change to related NF(e.g. PCF...)
+			newValue, err := mongoapi.RestfulAPIGetOne(collName, filter)
+			if err != nil {
+				logger.DataRepoLog.Errorln("RestfulAPIGetOne:", err.Error())
+				return &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Type:   err.Error(),
+				}
+			}
+			PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItems, origValue, newValue)
+
+		case "subscriptionData.provisionedData.smData":
+			filter := bson.M{"ueId": ueId}
+			oriSmDataList, err := mongoapi.RestfulAPIGetMany(collName, filter)
+			if err != nil {
+				logger.DataRepoLog.Errorf("Load smdata list from table {%s} of DB err: %+v", collName, err)
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Detail: err.Error(),
+				}
+				return problemDetails
+			}
+			for _, oriSmData := range oriSmDataList {
+				jsonData, _ := json.Marshal(oriSmData["singleNssai"])
+				var snssai models.Snssai
+				json.Unmarshal(jsonData, &snssai)
+				filter := bson.M{"ueId": ueId} //ex: {"ueId":"imsi-208930000000003" ,"singleNssai": {"sst": 1,"sd": "010203"}}
+				filter["singleNssai"] = bson.M{"sst": snssai.Sst, "sd": snssai.Sd}
+				logger.DataRepoLog.Infoln(ueId, "sst:", snssai.Sst, "sd:", snssai.Sd)
+				origValue, err := mongoapi.RestfulAPIGetOne(collName, filter)
+				if err != nil {
+					logger.DataRepoLog.Errorln("RestfulAPIGetOne:", err.Error())
+					return &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Type:   err.Error(),
+					}
+				}
+				// build the new group Ids of SM-data
+				newIntGpIds := []string{newGpId}
+				if origValue["internalGroupIds"] != nil {
+					oriIntGpIds := origValue["internalGroupIds"].(bson.A)
+					for _, gpId := range oriIntGpIds {
+						newIntGpIds = append(newIntGpIds, gpId.(string))
+					}
+				}
+				// It's strange here, but it's nessary to check the data existed or not
+				for cnt := 1; cnt < 21; cnt++ {
+					logger.DataRepoLog.Infoln("Repeat Count :", cnt)
+					rspBool, err := mongoapi.PureCheckDataExisted(collName, filter)
+					if err != nil {
+						logger.DataRepoLog.Errorln("PureCheckDataExisted:", err.Error())
+						return &models.ProblemDetails{
+							Status: http.StatusInternalServerError,
+							Type:   err.Error(),
+						}
+					} else if rspBool {
+						break
+					}
+					time.Sleep(100 * time.Millisecond)
+				}
+				// update the new group Ids of SM data
+				logger.DataRepoLog.Infof("new internal group Ids of SM-Data of ue[%s]:%v\n", ueId, newIntGpIds)
+				bsonData := bson.M{"internalGroupIds": newIntGpIds}
+				rspBool, err := mongoapi.RestfulAPIPutOne(collName, filter, bsonData)
+				if err != nil {
+					logger.DataRepoLog.Errorln("RestfulAPIPutOne:", err.Error())
+					return &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Type:   err.Error(),
+					}
+				}
+				logger.DataRepoLog.Infoln("Modify operation Search Existed SM-Data result:", rspBool)
+				// notify the subscription data change to related NF(e.g. PCF...)
+				newValue, err := mongoapi.RestfulAPIGetOne(collName, filter)
+				if err != nil {
+					logger.DataRepoLog.Errorln("RestfulAPIGetOne:", err.Error())
+					return &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Type:   err.Error(),
+					}
+				}
+				PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItems, origValue, newValue)
+			}
+		}
+	}
+	return nil
+}
+
+func deleteInternalGroupIdfromUeSubs(collnames []string, ueId, removeGpId string) *models.ProblemDetails {
+	for _, collName := range collnames {
+		switch collName {
+		case "subscriptionData.provisionedData.amData":
+			filter := bson.M{"ueId": ueId}
+			origValue, err := mongoapi.RestfulAPIGetOne(collName, filter)
+			if err != nil {
+				logger.DataRepoLog.Errorln("RestfulAPIGetOne:", err.Error())
+				return &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Type:   err.Error(),
+				}
+			}
+			// build the new group Ids of AM-data
+			oriGpIds := origValue["internalGroupIds"].(bson.A)
+			newGpIds := []string{}
+			var rmGpIdIdx int
+			for idx, val := range oriGpIds {
+				if val.(string) != removeGpId {
+					newGpIds = append(newGpIds, val.(string))
+				} else {
+					rmGpIdIdx = idx
+				}
+			}
+			// update the new group Ids of AM-data
+			logger.DataRepoLog.Infof("new internal group Ids of AM-Data of ue[%s]:%v\n", ueId, newGpIds)
+			bsonData := bson.M{"internalGroupIds": newGpIds}
+			rspBool, err := mongoapi.RestfulAPIPutOne(collName, filter, bsonData)
+			if err != nil {
+				logger.DataRepoLog.Errorln("RestfulAPIPutOne:", err.Error())
+				return &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Type:   err.Error(),
+				}
+			}
+			logger.DataRepoLog.Infoln("Modify operation Search Existed AM-Data result:", rspBool)
+			// notify the subscription data change to related NF(e.g. PCF...)
+			newValue, err := mongoapi.RestfulAPIGetOne(collName, filter)
+			if err != nil {
+				logger.DataRepoLog.Errorln("RestfulAPIGetOne:", err.Error())
+				return &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Type:   err.Error(),
+				}
+			}
+			patchItems := []ben_models.PatchItem{{
+				Op:   ben_models.PatchOperation_REMOVE,
+				Path: "/internalGroupIds/" + strconv.Itoa(rmGpIdIdx),
+			}}
+			PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItems, origValue, newValue)
+
+		case "subscriptionData.provisionedData.smData":
+			filter := bson.M{"ueId": ueId}
+			oriSmDataList, err := mongoapi.RestfulAPIGetMany(collName, filter)
+			if err != nil {
+				logger.DataRepoLog.Errorf("Load SM-Data list from table {%s} of DB err: %+v", collName, err)
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Detail: err.Error(),
+				}
+				return problemDetails
+			}
+
+			for _, oriSmData := range oriSmDataList {
+				jsonData, _ := json.Marshal(oriSmData["singleNssai"])
+				var snssai models.Snssai
+				json.Unmarshal(jsonData, &snssai)
+				filter := bson.M{"ueId": ueId}                                     //ex: {"ueId":"imsi-208930000000003" ,"singleNssai": {"sst": 1,"sd": "010203"}}
+				filter["singleNssai"] = bson.M{"sst": snssai.Sst, "sd": snssai.Sd} //the order of sst and sd is important!!
+				logger.DataRepoLog.Infoln(ueId, "sst:", snssai.Sst, "sd:", snssai.Sd)
+
+				// build the new group Ids of SM-data
+				oriGpIds := oriSmData["internalGroupIds"].(bson.A)
+				newGpIds := []string{}
+				var rmGpIdIdx int
+				for idx, val := range oriGpIds {
+					if val.(string) != removeGpId {
+						newGpIds = append(newGpIds, val.(string))
+					} else {
+						rmGpIdIdx = idx
+					}
+				}
+				logger.DataRepoLog.Infof("new internal group Ids of SM-Data of ue[%s]:%v\n", ueId, newGpIds)
+				// check the json data if available now or it may create empty json file
+				for cnt := 1; cnt < 21; cnt++ {
+					logger.DataRepoLog.Infoln("Repeat Count :", cnt)
+					checkBool, err := mongoapi.PureCheckDataExisted(collName, filter)
+					if err != nil {
+						logger.DataRepoLog.Errorln("PureCheckDataExisted:", err.Error())
+						return &models.ProblemDetails{
+							Status: http.StatusInternalServerError,
+							Type:   err.Error(),
+						}
+					} else if checkBool {
+						break
+					}
+					time.Sleep(100 * time.Millisecond)
+				}
+				// update the new group ids of subs SM-Data
+				bsonData := bson.M{"internalGroupIds": newGpIds}
+				rspBool, err := mongoapi.RestfulAPIPutOne(collName, filter, bsonData)
+				if err != nil {
+					logger.DataRepoLog.Errorln("RestfulAPIPutOne:", err.Error())
+					return &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Type:   err.Error(),
+					}
+				}
+				logger.DataRepoLog.Infoln("Modify operation Search Existed SM-Data result:", rspBool)
+				// notify the subscription data change to related NF(e.g. PCF...)
+				newValue, err := mongoapi.RestfulAPIGetOne(collName, filter)
+				if err != nil {
+					logger.DataRepoLog.Errorln("RestfulAPIGetOne:", err.Error())
+					return &models.ProblemDetails{
+						Status: http.StatusInternalServerError,
+						Type:   err.Error(),
+					}
+				}
+				patchItems := []ben_models.PatchItem{{
+					Op:   ben_models.PatchOperation_REMOVE,
+					Path: "/internalGroupIds/" + strconv.Itoa(rmGpIdIdx),
+				}}
+				PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItems, oriSmData, newValue)
+			}
+		}
+	}
+	return nil
+}
+
+func HandleQueryPP5GVNGroupProfile(request *httpwrapper.Request) *httpwrapper.Response {
+	extGpIds := request.Query["ext-group-ids"]
+	supFeat := request.Query.Get("supported-features")
+
+	ppVnGpProf, problemDetails := HandleQueryPP5GVNGroupProfileProcedure(extGpIds, supFeat)
+
+	if problemDetails == nil {
+		return httpwrapper.NewResponse(http.StatusOK, nil, ppVnGpProf)
+	} else {
+		logger.DataRepoLog.Errorf("HandleQueryPP5GVNGroupProfile error:%+v\n", *problemDetails)
+		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	}
+}
+
+func HandleQueryPP5GVNGroupProfileProcedure(extGpIds []string, supFeat string) (*ben_models.Pp5gVnGroupProfileData, *models.ProblemDetails) {
+	var ppVnGpProf ben_models.Pp5gVnGroupProfileData
+	ppVnGpProf.AllowedMtcProviders = make(map[string][]ben_models.AllowedMtcProviderInfo)
+	gpIdMapColl := "subscriptionData.extintGroupIDMap"
+	vnGpColl := "subscriptionData.group5GLANData"
+	for _, extGpId := range extGpIds {
+		// retrive internal group id
+		filter := bson.M{"externalGroupId": extGpId}
+		gpIdMap, err := mongoapi.RestfulAPIGetOne(gpIdMapColl, filter)
+		if err != nil {
+			logger.DataRepoLog.Errorf("can't find external id{%s} related info in DB\n", extGpId)
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
+		}
+		intGpId := gpIdMap["internalGroupId"].(string)
+
+		// retrive 5g vn group data
+		filter = bson.M{"internalGroupIdentifier": intGpId}
+		groupData, err := mongoapi.RestfulAPIGetOne(vnGpColl, filter)
+		if err != nil {
+			logger.DataRepoLog.Errorf(err.Error())
+			problemDetails := &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Detail: err.Error(),
+			}
+			return nil, problemDetails
+		}
+		var groupCfg ben_models.Model5GvnGroupConfiguration
+		jsonData, _ := json.Marshal(groupData)
+		json.Unmarshal(jsonData, &groupCfg)
+
+		var allowdMtcList []ben_models.AllowedMtcProviderInfo
+		allowdMtcList = append(allowdMtcList, ben_models.AllowedMtcProviderInfo{
+			MtcProviderInformation: ben_models.MtcProviderInformation(groupCfg.MtcProviderInformation),
+			AfId:                   groupCfg.AfInstanceId,
+		})
+		ppVnGpProf.AllowedMtcProviders[extGpId] = allowdMtcList
+	}
+	return &ppVnGpProf, nil
+}
+
+func HandleGetppDataEntryAfId(request *httpwrapper.Request) *httpwrapper.Response {
+	ueId := request.Params["ueId"]
+	afInsId := request.Params["afInstanceId"]
+
+	// refer to  TS 29.505 V17.9.0, Table 5.2.14B.2-1: Resource URI variables for this resource
+	switch ueId {
+	case "anyUE":
+	// case single UE:
+	// case extgroupid:
+	default:
+		return httpwrapper.NewResponse(http.StatusBadRequest, nil, nil)
+	}
+
+	response, problemDetails := HandleGetppDataEntryAfIdProcedure(ueId, afInsId)
+	if problemDetails != nil {
+		return httpwrapper.NewResponse(int(problemDetails.Status), nil, problemDetails)
+	} else {
+		return httpwrapper.NewResponse(http.StatusOK, nil, response)
+	}
+}
+
+func HandleGetppDataEntryAfIdProcedure(ueId, afInsId string) (*ben_models.PpDataEntry, *models.ProblemDetails) {
+	var ppDataEntry ben_models.PpDataEntry
+	// map uses external group id as key
+	ppDataEntry.Vn5gGroupCoinfigList = make(map[string]ben_models.Model5GvnGroupConfiguration)
+	switch ueId {
+	case "anyUE":
+		collGpIdMap := "subscriptionData.extintGroupIDMap"
+		gpIdMaps, err := mongoapi.RestfulAPIGetMany(collGpIdMap, nil)
+		if err != nil {
+			return nil, &models.ProblemDetails{
+				Status: http.StatusInternalServerError,
+				Cause:  err.Error(),
+			}
+		}
+
+		collGpCfg := "subscriptionData.group5GLANData"
+		for _, gpIdMap := range gpIdMaps {
+			extGpId := gpIdMap["externalGroupId"].(string)
+			intGpId := gpIdMap["internalGroupId"].(string)
+			gpCfg, err := mongoapi.RestfulAPIGetOne(collGpCfg, bson.M{"internalGroupIdentifier": intGpId})
+			if err != nil {
+				return nil, &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Cause:  err.Error(),
+				}
+			}
+			// check whether this group config is created by this AF Instance Id
+			if gpCfg["afInstanceId"].(string) == afInsId {
+				var rspGpcfg ben_models.Model5GvnGroupConfiguration
+				jsonDta, _ := json.Marshal(gpCfg)
+				_ = json.Unmarshal(jsonDta, &rspGpcfg)
+				ppDataEntry.Vn5gGroupCoinfigList[extGpId] = rspGpcfg
+			}
+		}
+	default:
+		return nil, &models.ProblemDetails{Status: http.StatusBadRequest, Cause: fmt.Sprintf("this service doesn't support request para of ueId[%s]", ueId)}
+	}
+	return &ppDataEntry, nil
 }

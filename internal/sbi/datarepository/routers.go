@@ -714,6 +714,69 @@ var routes = Routes{
 		"/subscription-data/:ueId/:servingPlmnId/ee-subscriptions/:subsId/amf-subscriptions",
 		HTTPGetAmfSubscriptionInfo,
 	},
+
+	{
+		"QueryGroupIdentifiers",
+		http.MethodGet,
+		"/subscription-data/group-data/group-identifiers",
+		QueryGroupIdentifiers,
+	},
+
+	{
+		"Query5GVnGroup",
+		http.MethodGet,
+		"/subscription-data/group-data/5g-vn-groups",
+		Query5GVnGroup,
+	},
+
+	{
+		"Create5GVnGroup",
+		http.MethodPut,
+		"/subscription-data/group-data/5g-vn-groups/:externalGroupId",
+		Create5GVnGroup,
+	},
+
+	{
+		"Delete5GVnGroup",
+		http.MethodDelete,
+		"/subscription-data/group-data/5g-vn-groups/:externalGroupId",
+		Delete5GVnGroup,
+	},
+
+	{
+		"Modify5GVnGroup",
+		http.MethodPatch,
+		"/subscription-data/group-data/5g-vn-groups/:externalGroupId",
+		Modify5GVnGroup,
+	},
+
+	{
+		"Get5GVnGroupConfiguration",
+		http.MethodGet,
+		"/subscription-data/group-data/5g-vn-groups/:externalGroupId",
+		Get5GVnGroupConfiguration,
+	},
+
+	{
+		"Query5GVnGroupInternal",
+		http.MethodGet,
+		"/subscription-data/group-data/5g-vn-groups/internal",
+		Query5GVnGroupInternal,
+	},
+
+	{
+		"QueryPP5GVNGroupProfile",
+		http.MethodGet,
+		"/subscription-data/group-data/5g-vn-groups/pp-profile-data",
+		QueryPP5GVNGroupProfile,
+	},
+
+	{
+		"HTTPGetppDataEntryAfId",
+		strings.ToUpper("Get"),
+		"/subscription-data/:ueId/pp-data-store/:afInstanceId",
+		HTTPGetppDataEntryAfId,
+	},
 }
 
 var subRoutes = Routes{
