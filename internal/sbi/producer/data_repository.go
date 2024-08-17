@@ -106,7 +106,7 @@ func QueryAmDataProcedure(collName string, ueId string, servingPlmnId string) (*
 func HandleAmfContext3gpp(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.DataRepoLog.Infof("Handle AmfContext3gpp")
 	collName := "subscriptionData.contextData.amf3gppAccess"
-	patchItem := request.Body.([]ben_models.PatchItem)
+	patchItem := request.Body.([]models.PatchItem)
 	ueId := request.Params["ueId"]
 
 	problemDetails := AmfContext3gppProcedure(collName, ueId, patchItem)
@@ -117,7 +117,7 @@ func HandleAmfContext3gpp(request *httpwrapper.Request) *httpwrapper.Response {
 	}
 }
 
-func patchDataToDBAndNotify(collName string, ueId string, patchItem []ben_models.PatchItem, filter bson.M) error {
+func patchDataToDBAndNotify(collName string, ueId string, patchItem []models.PatchItem, filter bson.M) error {
 	var err error
 	origValue, err := mongoapi.RestfulAPIGetOne(collName, filter)
 	if err != nil {
@@ -141,7 +141,7 @@ func patchDataToDBAndNotify(collName string, ueId string, patchItem []ben_models
 	return nil
 }
 
-func AmfContext3gppProcedure(collName string, ueId string, patchItem []ben_models.PatchItem) *models.ProblemDetails {
+func AmfContext3gppProcedure(collName string, ueId string, patchItem []models.PatchItem) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
 		logger.DataRepoLog.Errorf("AmfContext3gppProcedure err: %+v", err)
@@ -207,7 +207,7 @@ func HandleAmfContextNon3gpp(request *httpwrapper.Request) *httpwrapper.Response
 
 	ueId := request.Params["ueId"]
 	collName := "subscriptionData.contextData.amfNon3gppAccess"
-	patchItem := request.Body.([]ben_models.PatchItem)
+	patchItem := request.Body.([]models.PatchItem)
 	filter := bson.M{"ueId": ueId}
 
 	problemDetails := AmfContextNon3gppProcedure(ueId, collName, patchItem, filter)
@@ -219,7 +219,7 @@ func HandleAmfContextNon3gpp(request *httpwrapper.Request) *httpwrapper.Response
 	}
 }
 
-func AmfContextNon3gppProcedure(ueId string, collName string, patchItem []ben_models.PatchItem,
+func AmfContextNon3gppProcedure(ueId string, collName string, patchItem []models.PatchItem,
 	filter bson.M,
 ) *models.ProblemDetails {
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
@@ -286,7 +286,7 @@ func HandleModifyAuthentication(request *httpwrapper.Request) *httpwrapper.Respo
 
 	collName := "subscriptionData.authenticationData.authenticationSubscription"
 	ueId := request.Params["ueId"]
-	patchItem := request.Body.([]ben_models.PatchItem)
+	patchItem := request.Body.([]models.PatchItem)
 
 	problemDetails := ModifyAuthenticationProcedure(collName, ueId, patchItem)
 
@@ -297,7 +297,7 @@ func HandleModifyAuthentication(request *httpwrapper.Request) *httpwrapper.Respo
 	}
 }
 
-func ModifyAuthenticationProcedure(collName string, ueId string, patchItem []ben_models.PatchItem) *models.ProblemDetails {
+func ModifyAuthenticationProcedure(collName string, ueId string, patchItem []models.PatchItem) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
 		logger.DataRepoLog.Errorf("ModifyAuthenticationProcedure err: %+v", err)
@@ -1366,7 +1366,7 @@ func HandlePolicyDataUesUeIdOperatorSpecificDataPatch(request *httpwrapper.Reque
 
 	collName := "policyData.ues.operatorSpecificData"
 	ueId := request.Params["ueId"]
-	patchItem := request.Body.([]ben_models.PatchItem)
+	patchItem := request.Body.([]models.PatchItem)
 
 	problemDetails := PolicyDataUesUeIdOperatorSpecificDataPatchProcedure(collName, ueId, patchItem)
 
@@ -1378,7 +1378,7 @@ func HandlePolicyDataUesUeIdOperatorSpecificDataPatch(request *httpwrapper.Reque
 }
 
 func PolicyDataUesUeIdOperatorSpecificDataPatchProcedure(collName string, ueId string,
-	patchItem []ben_models.PatchItem,
+	patchItem []models.PatchItem,
 ) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 
@@ -1859,7 +1859,7 @@ func RemoveAmfSubscriptionsInfoProcedure(subsId string, ueId string) *models.Pro
 func HandleModifyAmfSubscriptionInfo(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.DataRepoLog.Infof("Handle ModifyAmfSubscriptionInfo")
 
-	patchItem := request.Body.([]ben_models.PatchItem)
+	patchItem := request.Body.([]models.PatchItem)
 	ueId := request.Params["ueId"]
 	subsId := request.Params["subsId"]
 
@@ -1873,7 +1873,7 @@ func HandleModifyAmfSubscriptionInfo(request *httpwrapper.Request) *httpwrapper.
 }
 
 func ModifyAmfSubscriptionInfoProcedure(ueId string, subsId string,
-	patchItem []ben_models.PatchItem,
+	patchItem []models.PatchItem,
 ) *models.ProblemDetails {
 	udrSelf := udr_context.GetSelf()
 	value, ok := udrSelf.UESubsCollection.Load(ueId)
@@ -2278,7 +2278,7 @@ func HandlePatchOperSpecData(request *httpwrapper.Request) *httpwrapper.Response
 
 	collName := "subscriptionData.operatorSpecificData"
 	ueId := request.Params["ueId"]
-	patchItem := request.Body.([]ben_models.PatchItem)
+	patchItem := request.Body.([]models.PatchItem)
 
 	problemDetails := PatchOperSpecDataProcedure(collName, ueId, patchItem)
 
@@ -2289,7 +2289,7 @@ func HandlePatchOperSpecData(request *httpwrapper.Request) *httpwrapper.Response
 	}
 }
 
-func PatchOperSpecDataProcedure(collName string, ueId string, patchItem []ben_models.PatchItem) *models.ProblemDetails {
+func PatchOperSpecDataProcedure(collName string, ueId string, patchItem []models.PatchItem) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
 		logger.DataRepoLog.Errorf("PatchOperSpecDataProcedure err: %+v", err)
@@ -2515,7 +2515,7 @@ func HandleModifyPpData(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.DataRepoLog.Infof("Handle ModifyPpData")
 
 	collName := "subscriptionData.ppData"
-	patchItem := request.Body.([]ben_models.PatchItem)
+	patchItem := request.Body.([]models.PatchItem)
 	ueId := request.Params["ueId"]
 
 	problemDetails := ModifyPpDataProcedure(collName, ueId, patchItem)
@@ -2526,7 +2526,7 @@ func HandleModifyPpData(request *httpwrapper.Request) *httpwrapper.Response {
 	}
 }
 
-func ModifyPpDataProcedure(collName string, ueId string, patchItem []ben_models.PatchItem) *models.ProblemDetails {
+func ModifyPpDataProcedure(collName string, ueId string, patchItem []models.PatchItem) *models.ProblemDetails {
 	filter := bson.M{"ueId": ueId}
 	if err := patchDataToDBAndNotify(collName, ueId, patchItem, filter); err != nil {
 		logger.DataRepoLog.Errorf("ModifyPpDataProcedure err: %+v", err)
@@ -3309,13 +3309,13 @@ func HandleCreate5GLANgroup(request *httpwrapper.Request) *httpwrapper.Response 
 	//TS 23.502-h70
 	//When the 5G VN group data (as described in clause 4.15.6.3b) or 5G VN group membership is updated, the
 	//UDR notifies to the subscribed PCF by sending Nudr_DM_Notify as defined in clause 4.16.12.2.
-	patchItem := ben_models.PatchItem{
-		Op:    ben_models.PatchOperation_ADD,
+	patchItem := models.PatchItem{
+		Op:    models.PatchOperation_ADD,
 		Path:  "subscriptionData.group5GLANData",
 		Value: group5GLANConfig,
 	}
 	for _, memberUeId := range group5GLANConfig.Members {
-		PreHandleOnDataChangeNotify(memberUeId, CurrentResourceUri, []ben_models.PatchItem{patchItem}, nil, nil)
+		PreHandleOnDataChangeNotify(memberUeId, CurrentResourceUri, []models.PatchItem{patchItem}, nil, nil)
 	}
 
 	//group creation sucuess
@@ -3997,7 +3997,7 @@ func HandleModify5GVnGroup(request *httpwrapper.Request) *httpwrapper.Response {
 	logger.DataRepoLog.Infof("Handle HandleModify5GVnGroup")
 
 	supFeat := request.Query.Get("supported-features")
-	patchItems := request.Body.([]ben_models.PatchItem)
+	patchItems := request.Body.([]models.PatchItem)
 	extGpId := request.Params["externalGroupId"]
 
 	patchResult, problemDetails := HandleModify5GVnGroupProcedure(patchItems, extGpId, supFeat)
@@ -4013,7 +4013,7 @@ func HandleModify5GVnGroup(request *httpwrapper.Request) *httpwrapper.Response {
 	}
 }
 
-func HandleModify5GVnGroupProcedure(patchItems []ben_models.PatchItem, extGpId, supFeat string) (*ben_models.PatchResult, *models.ProblemDetails) {
+func HandleModify5GVnGroupProcedure(patchItems []models.PatchItem, extGpId, supFeat string) (*ben_models.PatchResult, *models.ProblemDetails) {
 	// retrive Internal Group Id first using External Group Id
 	gpIdMapColl := "subscriptionData.extintGroupIDMap"
 	filter := bson.M{"externalGroupId": extGpId}
@@ -4041,7 +4041,7 @@ func HandleModify5GVnGroupProcedure(patchItems []ben_models.PatchItem, extGpId, 
 	var patchResults ben_models.PatchResult
 	for _, patchItem := range patchItems {
 		switch patchItem.Op {
-		case ben_models.PatchOperation_ADD:
+		case models.PatchOperation_ADD:
 			logger.DataRepoLog.Infof("PATCH single Item :%+v\n", patchItem)
 			gpsis := patchItem.Value.([]interface{})
 			collnames := []string{"subscriptionData.provisionedData.amData", "subscriptionData.provisionedData.smData"}
@@ -4051,7 +4051,7 @@ func HandleModify5GVnGroupProcedure(patchItems []ben_models.PatchItem, extGpId, 
 					return nil, problemDetails
 				}
 			}
-		case ben_models.PatchOperation_REMOVE:
+		case models.PatchOperation_REMOVE:
 			logger.DataRepoLog.Infof("PATCH single Item :%+v\n", patchItem)
 			gpsis := patchItem.Value.([]interface{})
 			collnames := []string{"subscriptionData.provisionedData.amData", "subscriptionData.provisionedData.smData"}
@@ -4061,10 +4061,10 @@ func HandleModify5GVnGroupProcedure(patchItems []ben_models.PatchItem, extGpId, 
 					return nil, problemDetails
 				}
 			}
-		case ben_models.PatchOperation_REPLACE:
+		case models.PatchOperation_REPLACE:
 			vnGpColl := "subscriptionData.group5GLANData"
 			filter = bson.M{"internalGroupIdentifier": intGpId}
-			if err := patchDataToDBAndNotify(vnGpColl, "", []ben_models.PatchItem{patchItem}, filter); err != nil {
+			if err := patchDataToDBAndNotify(vnGpColl, "", []models.PatchItem{patchItem}, filter); err != nil {
 				patchResults.Report = append(patchResults.Report, ben_models.ReportItem{
 					Path:   patchItem.Path,
 					Reason: err.Error(),
@@ -4080,8 +4080,8 @@ func HandleModify5GVnGroupProcedure(patchItems []ben_models.PatchItem, extGpId, 
 }
 
 func addInternalGroupIdToUeSubs(collnames []string, ueId, newGpId string) *models.ProblemDetails {
-	patchItems := []ben_models.PatchItem{{
-		Op:    ben_models.PatchOperation_ADD,
+	patchItems := []models.PatchItem{{
+		Op:    models.PatchOperation_ADD,
 		Path:  "/internalGroupIds/-",
 		Value: newGpId,
 	}}
@@ -4251,8 +4251,8 @@ func deleteInternalGroupIdfromUeSubs(collnames []string, ueId, removeGpId string
 					Type:   err.Error(),
 				}
 			}
-			patchItems := []ben_models.PatchItem{{
-				Op:   ben_models.PatchOperation_REMOVE,
+			patchItems := []models.PatchItem{{
+				Op:   models.PatchOperation_REMOVE,
 				Path: "/internalGroupIds/" + strconv.Itoa(rmGpIdIdx),
 			}}
 			PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItems, origValue, newValue)
@@ -4324,8 +4324,8 @@ func deleteInternalGroupIdfromUeSubs(collnames []string, ueId, removeGpId string
 						Type:   err.Error(),
 					}
 				}
-				patchItems := []ben_models.PatchItem{{
-					Op:   ben_models.PatchOperation_REMOVE,
+				patchItems := []models.PatchItem{{
+					Op:   models.PatchOperation_REMOVE,
 					Path: "/internalGroupIds/" + strconv.Itoa(rmGpIdIdx),
 				}}
 				PreHandleOnDataChangeNotify(ueId, CurrentResourceUri, patchItems, oriSmData, newValue)
