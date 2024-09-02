@@ -31,8 +31,8 @@ cloud.google.com/go/storage v1.6.0/go.mod h1:N7U0C8pVQ/+NIKOBQyamJIeKQKkZ+mxpohl
 cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RXyy7KQOVs=
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
-github.com/BENHSU0723/openapi_public v0.0.0-20240718060556-814b9f82e803 h1:Ujm4yP80c3kgwUpH+Jzv39sDGePqcYEq1W81aocB53c=
-github.com/BENHSU0723/openapi_public v0.0.0-20240718060556-814b9f82e803/go.mod h1:12ol/fDICxt86/KAT60lV3ymdQfRoNVdd80TVfiwnhs=
+github.com/BENHSU0723/openapi_public v0.0.0-20240829075111-d166c41f51ac h1:eo2hamPISgNmleyfHMHFG97gqVPXqGTP4kTALy9ZJAs=
+github.com/BENHSU0723/openapi_public v0.0.0-20240829075111-d166c41f51ac/go.mod h1:12ol/fDICxt86/KAT60lV3ymdQfRoNVdd80TVfiwnhs=
 github.com/BENHSU0723/util v1.0.7-0.20240813170231-23f0e225bfce h1:dOomNyHN5gYx2jdNWNBjy2NEPZFo+6L8R3bWD4wNPXE=
 github.com/BENHSU0723/util v1.0.7-0.20240813170231-23f0e225bfce/go.mod h1:R9asxYEWza3HaJ6dXvc7Yer9SOvd49YEc4PLPnEUVZk=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=

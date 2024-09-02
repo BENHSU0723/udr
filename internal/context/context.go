@@ -35,6 +35,7 @@ func Init() {
 	GetSelf().SubscriptionDataSubscriptions = make(map[subsId]*models.SubscriptionDataSubscriptions)
 	GetSelf().PolicyDataSubscriptions = make(map[subsId]*models.PolicyDataSubscription)
 	GetSelf().InfluenceDataSubscriptionIDGenerator = rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
+	GetSelf().PlmnList = make([]factory.PlmnID, 0)
 }
 
 type UDRContext struct {
@@ -60,6 +61,7 @@ type UDRContext struct {
 	appDataInfluDataSubscriptionIdGenerator uint64
 	mtx                                     sync.RWMutex
 	OAuth2Required                          bool
+	PlmnList                                []factory.PlmnID
 }
 
 type UESubsData struct {
@@ -145,6 +147,7 @@ func InitUdrContext(context *UDRContext) {
 		context.NrfUri = fmt.Sprintf("%s://%s:%d", context.UriScheme, "127.0.0.1", 29510)
 	}
 	context.NrfCertPem = configuration.NrfCertPem
+	context.PlmnList = configuration.PLMNList
 }
 
 func (context *UDRContext) GetIPv4Uri() string {

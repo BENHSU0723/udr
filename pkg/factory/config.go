@@ -59,6 +59,12 @@ type Configuration struct {
 	Mongodb    *Mongodb `yaml:"mongodb" valid:"required"`
 	NrfUri     string   `yaml:"nrfUri" valid:"url,required"`
 	NrfCertPem string   `yaml:"nrfCertPem,omitempty" valid:"optional"`
+	PLMNList   []PlmnID `yaml:"plmnList"  valid:"optional"`
+}
+
+type PlmnID struct {
+	Mcc string `yaml:"mcc"`
+	Mnc string `yaml:"mnc"`
 }
 
 type Logger struct {

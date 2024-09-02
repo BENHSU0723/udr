@@ -2617,6 +2617,7 @@ func HandleGetSharedData(request *httpwrapper.Request) *httpwrapper.Response {
 	}
 	collName := "subscriptionData.sharedData"
 
+	logger.DataRepoLog.Warnf("the shared data id list:%+v\n", sharedDataIds)
 	response, problemDetails := GetSharedDataProcedure(collName, sharedDataIds)
 
 	if response != nil {
@@ -2842,14 +2843,14 @@ func QuerySmDataProcedure(collName string, ueId string, servingPlmnId string,
 		return nil
 	}
 	for _, smData := range sessionManagementSubscriptionDatas {
-		var tmpSmData models.SessionManagementSubscriptionData
+		var tmpSmData ben_models.SessionManagementSubscriptionData
 		err := json.Unmarshal(util.MapToByte(smData), &tmpSmData)
 		if err != nil {
 			logger.DataRepoLog.Debug("SmData Unmarshal error")
 			continue
 		}
 		dnnConfigurations := tmpSmData.DnnConfigurations
-		tmpDnnConfigurations := make(map[string]models.DnnConfiguration)
+		tmpDnnConfigurations := make(map[string]ben_models.DnnConfiguration)
 		for escapedDnn, dnnConf := range dnnConfigurations {
 			dnn := util.UnescapeDnn(escapedDnn)
 			tmpDnnConfigurations[dnn] = dnnConf
@@ -3348,7 +3349,8 @@ func Create5GLANgroupProcedure(group5GLANConfig ben_models.Model5GvnGroupConfigu
 	}
 
 	//insert 5GLAN VN group Config and external group id and intrenal group id into many tables ofMongoDB
-	collNames := []string{"subscriptionData.provisionedData.smData", "subscriptionData.provisionedData.amData", "subscriptionData.group5GLANData"}
+	collNames := []string{"subscriptionData.provisionedData.smData", "subscriptionData.provisionedData.amData",
+		"subscriptionData.group5GLANData", "subscriptionData.sharedData"}
 	problemDetrals, statusCode := PutVNGroupDataToDB(collNames, externalGroupId, group5GLANConfig)
 	if problemDetrals != nil {
 		return nil, problemDetrals, statusCode
@@ -3359,6 +3361,9 @@ func Create5GLANgroupProcedure(group5GLANConfig ben_models.Model5GvnGroupConfigu
 
 func PutVNGroupDataToDB(collNames []string, extGroupId string, vnGroupConfig ben_models.Model5GvnGroupConfiguration) (*models.ProblemDetails, int) {
 
+	// pattern: "^[0-9]{5,6}-.+$"
+	plmn := udr_context.GetSelf().PlmnList[0]
+	sharedDataId := plmn.Mcc + plmn.Mnc + "-" + extGroupId
 	for _, collName := range collNames {
 		switch collName {
 		//crete group data
@@ -3374,7 +3379,32 @@ func PutVNGroupDataToDB(collNames []string, extGroupId string, vnGroupConfig ben
 				}
 				return problemDetails, http.StatusInternalServerError
 			}
-		//insert internal group id to amData
+		case "subscriptionData.sharedData":
+			sharedGpData := ben_models.SharedData{
+				SharedDataId: sharedDataId,
+				SharedVnGroupDatas: map[string]ben_models.VnGroupData{
+					vnGroupConfig.InternalGroupIdentifier: ben_models.VnGroupData{
+						PduSessionTypes: ben_models.PduSessionTypes{
+							DefaultSessionType: vnGroupConfig.Var5gVnGroupData.PduSessionTypes[0],
+						},
+						Dnn:            vnGroupConfig.Var5gVnGroupData.Dnn,
+						SingleNssai:    vnGroupConfig.Var5gVnGroupData.SNssai,
+						AppDescriptors: vnGroupConfig.Var5gVnGroupData.AppDescriptors,
+					},
+				},
+			}
+			putData := util.ToBsonM(sharedGpData)
+			filter := bson.M{"sharedDataId": sharedDataId}
+			logger.DataRepoLog.Warnf("put share data of vn 5g group : id{%s}\n", sharedDataId)
+			if _, err := mongoapi.RestfulAPIPutOne(collName, filter, putData); err != nil {
+				logger.DataRepoLog.Errorf("Insert VN group Data into table \"%s\" of DB err: %+v", collName, err)
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Detail: err.Error(),
+				}
+				return problemDetails, http.StatusInternalServerError
+			}
+			//insert internal group id to amData
 		case "subscriptionData.provisionedData.amData":
 			for _, memberUeId := range vnGroupConfig.Members {
 				filter := bson.M{"ueId": memberUeId}
@@ -3444,9 +3474,13 @@ func PutVNGroupDataToDB(collNames []string, extGroupId string, vnGroupConfig ben
 					// Convert the map to JSON
 					jsonData, _ = json.Marshal(orismData)
 					// Convert the JSON to a struct
-					var newsmData models.SessionManagementSubscriptionData
+					var newsmData ben_models.SessionManagementSubscriptionData
 					json.Unmarshal(jsonData, &newsmData)
 					newsmData.InternalGroupIds = append(newsmData.InternalGroupIds, vnGroupConfig.InternalGroupIdentifier)
+					if len(newsmData.SharedVnGroupDataIds) == 0 {
+						newsmData.SharedVnGroupDataIds = make(map[string]string, 0)
+					}
+					newsmData.SharedVnGroupDataIds[vnGroupConfig.InternalGroupIdentifier] = sharedDataId
 					smDataBsonM := util.ToBsonM(newsmData)
 					smDataBsonM["ueId"] = memberUeId                          //addtionall Info
 					smDataBsonM["servingPlmnId"] = orismData["servingPlmnId"] //addtionall Info
@@ -3605,7 +3639,8 @@ func Handle5GVnGroupDelete(request *httpwrapper.Request) *httpwrapper.Response {
 
 	extGpId := request.Params["externalGroupId"]
 	collnames := []string{"subscriptionData.group5GLANData", "subscriptionData.extintGroupIDMap",
-		"subscriptionData.provisionedData.smData", "subscriptionData.provisionedData.amData"}
+		"subscriptionData.provisionedData.smData", "subscriptionData.provisionedData.amData",
+		"subscriptionData.sharedData"}
 
 	problemDetails := Handle5GVnGroupDeleteProcedure(extGpId, collnames)
 
@@ -3622,6 +3657,21 @@ func Handle5GVnGroupDeleteProcedure(extGpId string, collnames []string) *models.
 	var intGroupId string
 	for _, collName := range collnames {
 		switch collName {
+		case "subscriptionData.sharedData":
+			// pattern: "^[0-9]{5,6}-.+$"
+			plmn := udr_context.GetSelf().PlmnList[0]
+			sharedDataId := plmn.Mcc + plmn.Mnc + "-" + extGpId
+			filter := bson.M{"sharedDataId": sharedDataId}
+			err := mongoapi.RestfulAPIDeleteOne(collName, filter)
+			logger.DataRepoLog.Warnf("delete share data of vn 5g group : id{%s}\n", sharedDataId)
+			if err != nil {
+				logger.DataRepoLog.Errorf("delete share 5G VN Group Data {%s} of DB err: %+v", collName, err)
+				problemDetails := &models.ProblemDetails{
+					Status: http.StatusInternalServerError,
+					Detail: err.Error(),
+				}
+				return problemDetails
+			}
 		case "subscriptionData.provisionedData.amData":
 			for _, memberUeId := range memberUpsis {
 				filter := bson.M{"ueId": memberUeId}
@@ -3697,8 +3747,11 @@ func Handle5GVnGroupDeleteProcedure(extGpId string, collnames []string) *models.
 					// SmData: Convert the map to JSON
 					jsonData, _ = json.Marshal(oriSmData)
 					// SmData: Convert the JSON to a struct
-					var newsmData models.SessionManagementSubscriptionData
+					var newsmData ben_models.SessionManagementSubscriptionData
 					json.Unmarshal(jsonData, &newsmData)
+					// delete shared data id of vn group
+					delete(newsmData.SharedVnGroupDataIds, intGroupId)
+					logger.DataRepoLog.Warnln(newsmData)
 					// delete a group Id from internal group id list
 					var newIntGpIds []string
 					for _, intGpid := range newsmData.InternalGroupIds {
