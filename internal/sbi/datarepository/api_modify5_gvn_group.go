@@ -12,8 +12,6 @@ package datarepository
 import (
 	"net/http"
 
-	ben_models "github.com/BENHSU0723/openapi_public/models"
-
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udr/internal/logger"
@@ -24,7 +22,7 @@ import (
 
 // Individual5GVnGroup: Modify5GVnGroup - modify the 5GVnGroup
 func Modify5GVnGroup(c *gin.Context) {
-	var patchItemArray []ben_models.PatchItem
+	var patchItemArray []models.PatchItem
 
 	requestBody, err := c.GetRawData()
 	if err != nil {
@@ -51,6 +49,7 @@ func Modify5GVnGroup(c *gin.Context) {
 		return
 	}
 
+	logger.DataRepoLog.Warnln("Patch Items: ", patchItemArray)
 	req := httpwrapper.NewRequest(c.Request, patchItemArray)
 	req.Params["externalGroupId"] = c.Param("externalGroupId")
 
